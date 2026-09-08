@@ -1,21 +1,56 @@
-# AI Cognitive Learning Map
 
-An AI-powered learning system that helps students understand their strengths, weaknesses, confidence, and learning patterns.
+# 🧠 AI Cognitive Learning Map
 
-## Goal
+An AI-powered learning assessment system that goes beyond simple quiz scores to analyze a student's **knowledge, confidence, and learning gaps**.
 
-The goal of this project is to go beyond simple quiz scores and explore why a student struggles with a concept.
+## 🎯 Project Goal
 
-## Planned Features
+Most learning platforms tell students whether an answer is right or wrong.
 
-- Concept-wise knowledge mapping
-- Weakness detection
-- Misconception detection
-- Confidence analysis
-- Learning recommendations
-- Knowledge retention tracking
-- Personalized learning paths
+The AI Cognitive Learning Map explores a different question:
 
-## Project Status
+> **Why might a student be struggling with a concept?**
 
-🚧 Version 1.0 — In Development
+The system analyzes both **answer correctness** and **self-reported confidence** to identify different learning states.
+
+## ✨ Version 1.0 Features
+
+- 📝 DSA knowledge assessment
+- 🧠 Confidence tracking for every question
+- 📊 Knowledge score calculation
+- 🔍 Concept-by-concept analysis
+- 🚨 Possible misconception detection
+- 📚 Personalized study recommendations
+- 🗺️ Dynamic cognitive learning map
+- 🎯 Identification of concepts that need reinforcement
+
+## 🧩 Current Learning Concepts
+
+The current prototype evaluates:
+
+- Arrays
+- Linked Lists
+- Stack & Queue
+- Recursion
+- Trees
+
+The learning map also shows the relationship between these concepts and future topics such as Graphs.
+
+## 🔬 How It Works
+
+```text
+Student
+   ↓
+DSA Assessment
+   ↓
+Answer + Confidence
+   ↓
+Analysis Engine
+   ↓
+Knowledge & Confidence Analysis
+   ↓
+Learning State Detection
+   ↓
+Personalized Recommendation
+   ↓
+Cognitive Learning Map
