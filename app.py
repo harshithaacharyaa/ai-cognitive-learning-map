@@ -1,8 +1,11 @@
 import streamlit as st
 from questions import QUESTIONS
+from diagnostics import DIAGNOSTIC_QUESTIONS
+from diagnostic_engine import classify_diagnostic_reason
 
 # ============================================================
-# AI COGNITIVE LEARNING MAP - VERSION 2.0
+# AI COGNITIVE LEARNING MAP - VERSION 3.2
+# Diagnostic Reasoning Engine
 # ============================================================
 
 st.set_page_config(
@@ -19,7 +22,8 @@ st.title("🧠 AI Cognitive Learning Map")
 
 st.write(
     "An intelligent learning assessment that analyzes "
-    "your knowledge, confidence, and learning gaps."
+    "your knowledge, confidence, and the reasons behind "
+    "your learning difficulties."
 )
 
 st.divider()
@@ -36,10 +40,10 @@ if name:
         f"Welcome, {name}! Let's understand your DSA knowledge."
     )
 
-    st.header("🧩 Adaptive DSA Assessment")
+    st.header("🧩 DSA Assessment")
 
     st.write(
-        f"This V2 assessment contains {len(QUESTIONS)} questions "
+        f"This assessment contains {len(QUESTIONS)} questions "
         "across multiple DSA concepts and difficulty levels."
     )
 
@@ -144,10 +148,6 @@ if name:
 
         results = []
 
-        # ----------------------------------------------------
-        # ANALYZE EVERY QUESTION
-        # ----------------------------------------------------
-
         for question in QUESTIONS:
 
             question_id = question["id"]
@@ -192,11 +192,11 @@ if name:
 
             })
 
-        # ====================================================
-        # STORE RESULTS
-        # ====================================================
-
         st.session_state["results"] = results
+
+        st.session_state["diagnostic_answers"] = {}
+
+        st.session_state["diagnostic_analysis"] = {}
 
     # ========================================================
     # DISPLAY RESULTS
@@ -273,6 +273,176 @@ if name:
         st.divider()
 
         # ====================================================
+        # DIAGNOSTIC QUESTIONING
+        # ====================================================
+
+        st.header("🔬 Why Did You Struggle?")
+
+        st.write(
+            "The system detected learning signals in some of "
+            "your answers. Your responses will help identify "
+            "the possible reason behind each difficulty."
+        )
+
+        diagnostic_results = []
+
+        for result in results:
+
+            status = result["status"]
+
+            if status not in DIAGNOSTIC_QUESTIONS:
+                continue
+
+            question_id = result["id"]
+
+            diagnostic_data = DIAGNOSTIC_QUESTIONS[status]
+
+            st.markdown(
+                f"### {result['icon']} Question {question_id} — "
+                f"{result['concept']}"
+            )
+
+            st.write(
+                f"**Assessment result:** {status}"
+            )
+
+            st.write(
+                f"**Your answer:** {result['given_answer']}"
+            )
+
+            st.write(
+                f"**Correct answer:** {result['correct_answer']}"
+            )
+
+            st.info(
+                diagnostic_data["question"]
+            )
+
+            diagnostic_answer = st.radio(
+                "Select the reason that best describes your situation:",
+                diagnostic_data["options"],
+                key=f"diagnostic_{question_id}"
+            )
+
+            # ------------------------------------------------
+            # STORE DIAGNOSTIC RESPONSE
+            # ------------------------------------------------
+
+            st.session_state["diagnostic_answers"][question_id] = {
+                "concept": result["concept"],
+                "status": status,
+                "reason": diagnostic_answer
+            }
+
+            # ------------------------------------------------
+            # REASONING ENGINE
+            # ------------------------------------------------
+
+            cognitive_analysis = classify_diagnostic_reason(
+                diagnostic_answer
+            )
+
+            st.session_state["diagnostic_analysis"][question_id] = {
+                "concept": result["concept"],
+                "state": cognitive_analysis["state"],
+                "code": cognitive_analysis["code"],
+                "recommendation": cognitive_analysis["recommendation"]
+            }
+
+            diagnostic_results.append({
+                "concept": result["concept"],
+                "status": status,
+                "reason": diagnostic_answer,
+                "state": cognitive_analysis["state"],
+                "code": cognitive_analysis["code"],
+                "recommendation": cognitive_analysis["recommendation"]
+            })
+
+            # ------------------------------------------------
+            # SHOW COGNITIVE INTERPRETATION
+            # ------------------------------------------------
+
+            st.success(
+                f"🧠 **Detected cognitive state:** "
+                f"{cognitive_analysis['state']}"
+            )
+
+            st.write(
+                f"**What this means:** "
+                f"{cognitive_analysis['recommendation']}"
+            )
+
+            st.divider()
+
+        # ====================================================
+        # DIAGNOSTIC SUMMARY
+        # ====================================================
+
+        if diagnostic_results:
+
+            st.subheader("🧠 Diagnostic Summary")
+
+            state_counts = {}
+
+            for diagnostic in diagnostic_results:
+
+                state = diagnostic["state"]
+
+                if state not in state_counts:
+
+                    state_counts[state] = 0
+
+                state_counts[state] += 1
+
+            for state, count in state_counts.items():
+
+                st.write(
+                    f"**{state}** — {count} signal(s)"
+                )
+
+            st.divider()
+
+            # ================================================
+            # PERSONALIZED DIAGNOSTIC RECOMMENDATIONS
+            # ================================================
+
+            st.subheader(
+                "🎯 Recommendations Based on Your Learning Pattern"
+            )
+
+            shown_recommendations = set()
+
+            for diagnostic in diagnostic_results:
+
+                recommendation = diagnostic["recommendation"]
+
+                if recommendation in shown_recommendations:
+                    continue
+
+                shown_recommendations.add(recommendation)
+
+                st.markdown(
+                    f"**{diagnostic['concept']}**"
+                )
+
+                st.write(
+                    f"🧠 {diagnostic['state']}"
+                )
+
+                st.info(
+                    recommendation
+                )
+
+        else:
+
+            st.success(
+                "🎉 No diagnostic investigation is required. "
+                "Your assessed answers were strong and confident."
+            )
+
+        st.divider()
+
+        # ====================================================
         # DIFFICULTY ANALYSIS
         # ====================================================
 
@@ -287,10 +457,8 @@ if name:
         for difficulty in difficulties:
 
             difficulty_results = [
-
                 result
                 for result in results
-
                 if result["difficulty"] == difficulty
             ]
 
@@ -340,10 +508,8 @@ if name:
         for concept in concepts:
 
             concept_results = [
-
                 result
                 for result in results
-
                 if result["concept"] == concept
             ]
 
@@ -384,7 +550,7 @@ if name:
         st.divider()
 
         # ====================================================
-        # FIND PRIORITY CONCEPT
+        # PRIORITY LEARNING AREA
         # ====================================================
 
         st.subheader("🎯 Your Highest-Priority Learning Area")
@@ -422,8 +588,7 @@ if name:
                 st.error(
                     f"🚨 **Investigate {concept} first.**\n\n"
                     "You answered incorrectly with high confidence. "
-                    "This may indicate a misconception or misunderstanding "
-                    "that should be investigated."
+                    "This may indicate a misconception or misunderstanding."
                 )
 
             elif status == "Learning Gap":
@@ -512,7 +677,7 @@ if name:
         st.divider()
 
         # ====================================================
-        # STUDY PLAN
+        # PERSONALIZED STUDY PLAN
         # ====================================================
 
         st.subheader("📚 Personalized Study Plan")
@@ -552,8 +717,7 @@ if name:
 
             st.success(
                 "Your assessed concepts are above the current "
-                "learning-gap threshold. You can move toward "
-                "more advanced problems."
+                "learning-gap threshold."
             )
 
         st.divider()
@@ -566,7 +730,7 @@ if name:
 
         st.write(
             "The map connects concepts using prerequisite "
-            "relationships defined in the V2 question bank."
+            "relationships defined in the question bank."
         )
 
         def map_label(concept):
@@ -678,8 +842,7 @@ if name:
 
             st.info(
                 "You have a reasonable foundation, but some "
-                "concepts need reinforcement before progressing "
-                "to more advanced topics."
+                "concepts need reinforcement before progressing."
             )
 
         else:
@@ -696,6 +859,6 @@ if name:
         # ====================================================
 
         st.caption(
-            "AI Cognitive Learning Map — Version 2.0 | "
-            "Adaptive rule-based learning assessment prototype"
+            "AI Cognitive Learning Map — Version 3.2 | "
+            "Diagnostic reasoning prototype"
         )
