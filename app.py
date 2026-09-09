@@ -1,7 +1,8 @@
 import streamlit as st
+from questions import QUESTIONS
 
 # ============================================================
-# AI COGNITIVE LEARNING MAP - VERSION 1.0
+# AI COGNITIVE LEARNING MAP - VERSION 2.0
 # ============================================================
 
 st.set_page_config(
@@ -35,133 +36,65 @@ if name:
         f"Welcome, {name}! Let's understand your DSA knowledge."
     )
 
-    st.header("🧩 DSA Knowledge Assessment")
+    st.header("🧩 Adaptive DSA Assessment")
 
     st.write(
-        "Answer each question and rate how confident you are "
-        "in your answer."
+        f"This V2 assessment contains {len(QUESTIONS)} questions "
+        "across multiple DSA concepts and difficulty levels."
     )
 
     # ========================================================
-    # QUESTION 1 - ARRAYS
+    # STORE ANSWERS
     # ========================================================
 
-    q1 = st.radio(
-        "1. Which data structure stores elements in contiguous memory?",
-        [
-            "Linked List",
-            "Array",
-            "Tree",
-            "Graph"
-        ],
-        key="q1"
-    )
-
-    c1 = st.slider(
-        "Confidence for Question 1",
-        1, 5, 3,
-        key="c1"
-    )
-
-    st.divider()
+    user_answers = {}
+    user_confidence = {}
 
     # ========================================================
-    # QUESTION 2 - LINKED LISTS
+    # QUESTIONS
     # ========================================================
 
-    q2 = st.radio(
-        "2. Which pointer usually points to the next node in a linked list?",
-        [
-            "Head",
-            "Next",
-            "Root",
-            "Parent"
-        ],
-        key="q2"
-    )
+    for question in QUESTIONS:
 
-    c2 = st.slider(
-        "Confidence for Question 2",
-        1, 5, 3,
-        key="c2"
-    )
+        question_id = question["id"]
 
-    st.divider()
+        st.markdown(
+            f"### Question {question_id}"
+        )
 
-    # ========================================================
-    # QUESTION 3 - STACK
-    # ========================================================
+        st.caption(
+            f"Concept: {question['concept']}  |  "
+            f"Difficulty: {question['difficulty']}"
+        )
 
-    q3 = st.radio(
-        "3. Which data structure follows the LIFO principle?",
-        [
-            "Queue",
-            "Stack",
-            "Array",
-            "Linked List"
-        ],
-        key="q3"
-    )
+        answer = st.radio(
+            question["question"],
+            question["options"],
+            key=f"answer_{question_id}"
+        )
 
-    c3 = st.slider(
-        "Confidence for Question 3",
-        1, 5, 3,
-        key="c3"
-    )
+        confidence = st.slider(
+            "How confident are you?",
+            1,
+            5,
+            3,
+            key=f"confidence_{question_id}"
+        )
 
-    st.divider()
+        user_answers[question_id] = answer
+        user_confidence[question_id] = confidence
 
-    # ========================================================
-    # QUESTION 4 - RECURSION
-    # ========================================================
-
-    q4 = st.radio(
-        "4. What must a recursive function eventually have?",
-        [
-            "A loop",
-            "A base case",
-            "A database",
-            "A queue"
-        ],
-        key="q4"
-    )
-
-    c4 = st.slider(
-        "Confidence for Question 4",
-        1, 5, 3,
-        key="c4"
-    )
-
-    st.divider()
-
-    # ========================================================
-    # QUESTION 5 - TREES
-    # ========================================================
-
-    q5 = st.radio(
-        "5. What is the topmost node of a tree called?",
-        [
-            "Leaf",
-            "Child",
-            "Root",
-            "Edge"
-        ],
-        key="q5"
-    )
-
-    c5 = st.slider(
-        "Confidence for Question 5",
-        1, 5, 3,
-        key="c5"
-    )
-
-    st.divider()
+        st.divider()
 
     # ========================================================
     # ANALYSIS ENGINE
     # ========================================================
 
-    def analyze_answer(answer, correct_answer, confidence):
+    def analyze_answer(
+        answer,
+        correct_answer,
+        confidence
+    ):
 
         correct = answer == correct_answer
 
@@ -178,7 +111,8 @@ if name:
             return (
                 "Confidence Gap",
                 "🟡",
-                "You answered correctly, but your confidence is relatively low."
+                "You answered correctly, but your confidence "
+                "is relatively low."
             )
 
         elif not correct and confidence < 4:
@@ -186,7 +120,8 @@ if name:
             return (
                 "Learning Gap",
                 "🟠",
-                "This concept needs additional learning and practice."
+                "This concept needs additional learning "
+                "and practice."
             )
 
         else:
@@ -194,8 +129,8 @@ if name:
             return (
                 "Possible Misconception",
                 "🔴",
-                "You were highly confident but answered incorrectly. "
-                "This concept should be investigated."
+                "You were highly confident but answered "
+                "incorrectly. This concept should be investigated."
             )
 
     # ========================================================
@@ -207,54 +142,21 @@ if name:
         use_container_width=True
     ):
 
-        # ----------------------------------------------------
-        # QUESTION DATA
-        # ----------------------------------------------------
-
-        answers = {
-
-            "Arrays": (
-                q1,
-                "Array",
-                c1
-            ),
-
-            "Linked Lists": (
-                q2,
-                "Next",
-                c2
-            ),
-
-            "Stack & Queue": (
-                q3,
-                "Stack",
-                c3
-            ),
-
-            "Recursion": (
-                q4,
-                "A base case",
-                c4
-            ),
-
-            "Trees": (
-                q5,
-                "Root",
-                c5
-            )
-        }
-
-        # ----------------------------------------------------
-        # STORE RESULTS
-        # ----------------------------------------------------
-
         results = []
 
-        for concept, data in answers.items():
+        # ----------------------------------------------------
+        # ANALYZE EVERY QUESTION
+        # ----------------------------------------------------
 
-            answer = data[0]
-            correct_answer = data[1]
-            confidence = data[2]
+        for question in QUESTIONS:
+
+            question_id = question["id"]
+
+            answer = user_answers[question_id]
+
+            confidence = user_confidence[question_id]
+
+            correct_answer = question["answer"]
 
             status, icon, explanation = analyze_answer(
                 answer,
@@ -264,24 +166,52 @@ if name:
 
             results.append({
 
-                "concept": concept,
+                "id": question_id,
+
+                "concept": question["concept"],
+
+                "difficulty": question["difficulty"],
+
                 "status": status,
+
                 "icon": icon,
+
                 "confidence": confidence,
+
                 "correct": answer == correct_answer,
-                "explanation": explanation
+
+                "explanation": explanation,
+
+                "question": question["question"],
+
+                "correct_answer": correct_answer,
+
+                "given_answer": answer,
+
+                "prerequisite": question["prerequisite"]
+
             })
 
         # ====================================================
-        # RESULTS HEADER
+        # STORE RESULTS
         # ====================================================
+
+        st.session_state["results"] = results
+
+    # ========================================================
+    # DISPLAY RESULTS
+    # ========================================================
+
+    if "results" in st.session_state:
+
+        results = st.session_state["results"]
 
         st.divider()
 
         st.header("📊 Your Cognitive Profile")
 
         # ====================================================
-        # CALCULATE SCORES
+        # OVERALL SCORES
         # ====================================================
 
         correct_count = sum(
@@ -300,11 +230,17 @@ if name:
             for result in results
         ) / total_questions
 
-        # ====================================================
-        # TOP METRICS
-        # ====================================================
+        strong_count = sum(
+            result["status"] == "Strong"
+            for result in results
+        )
 
-        col1, col2, col3 = st.columns(3)
+        misconception_count = sum(
+            result["status"] == "Possible Misconception"
+            for result in results
+        )
+
+        col1, col2, col3, col4 = st.columns(4)
 
         with col1:
 
@@ -322,15 +258,64 @@ if name:
 
         with col3:
 
-            strong_count = sum(
-                result["status"] == "Strong"
-                for result in results
-            )
-
             st.metric(
                 "Strong Concepts",
-                f"{strong_count}/{total_questions}"
+                str(strong_count)
             )
+
+        with col4:
+
+            st.metric(
+                "Investigate",
+                str(misconception_count)
+            )
+
+        st.divider()
+
+        # ====================================================
+        # DIFFICULTY ANALYSIS
+        # ====================================================
+
+        st.subheader("📈 Performance by Difficulty")
+
+        difficulties = [
+            "Easy",
+            "Medium",
+            "Hard"
+        ]
+
+        for difficulty in difficulties:
+
+            difficulty_results = [
+
+                result
+                for result in results
+
+                if result["difficulty"] == difficulty
+            ]
+
+            if difficulty_results:
+
+                difficulty_correct = sum(
+                    result["correct"]
+                    for result in difficulty_results
+                )
+
+                difficulty_score = (
+                    difficulty_correct
+                    / len(difficulty_results)
+                ) * 100
+
+                st.write(
+                    f"**{difficulty}:** "
+                    f"{difficulty_score:.0f}% "
+                    f"({difficulty_correct}/"
+                    f"{len(difficulty_results)})"
+                )
+
+                st.progress(
+                    difficulty_score / 100
+                )
 
         st.divider()
 
@@ -340,42 +325,69 @@ if name:
 
         st.subheader("🔍 Concept-by-Concept Analysis")
 
+        concepts = []
+
         for result in results:
 
-            st.markdown(
-                f"### {result['icon']} {result['concept']}"
+            if result["concept"] not in concepts:
+
+                concepts.append(
+                    result["concept"]
+                )
+
+        concept_scores = {}
+
+        for concept in concepts:
+
+            concept_results = [
+
+                result
+                for result in results
+
+                if result["concept"] == concept
+            ]
+
+            concept_correct = sum(
+                result["correct"]
+                for result in concept_results
             )
 
-            col1, col2 = st.columns(2)
+            concept_score = (
+                concept_correct
+                / len(concept_results)
+            ) * 100
 
-            with col1:
+            concept_scores[concept] = concept_score
 
-                st.write(
-                    f"**Status:** {result['status']}"
-                )
+            st.markdown(
+                f"### {concept}"
+            )
 
-                st.write(
-                    f"**Confidence:** "
-                    f"{result['confidence']}/5"
-                )
-
-            with col2:
-
-                st.write(
-                    result["explanation"]
-                )
+            st.write(
+                f"**Knowledge:** "
+                f"{concept_score:.0f}%"
+            )
 
             st.progress(
-                result["confidence"] / 5
+                concept_score / 100
             )
+
+            for result in concept_results:
+
+                st.write(
+                    f"{result['icon']} "
+                    f"Question {result['id']} — "
+                    f"{result['status']} — "
+                    f"Confidence {result['confidence']}/5"
+                )
 
         st.divider()
 
         # ====================================================
-        # PERSONALIZED RECOMMENDATION
+        # FIND PRIORITY CONCEPT
         # ====================================================
 
-        st.subheader("🎯 Your Recommended Next Step")
+        st.subheader("🎯 Your Highest-Priority Learning Area")
 
         priority_order = [
             "Possible Misconception",
@@ -383,7 +395,7 @@ if name:
             "Confidence Gap"
         ]
 
-        recommendation = None
+        priority_result = None
 
         for priority in priority_order:
 
@@ -391,214 +403,255 @@ if name:
 
                 if result["status"] == priority:
 
-                    recommendation = result
+                    priority_result = result
 
                     break
 
-            if recommendation:
+            if priority_result:
 
                 break
 
-        if recommendation:
+        if priority_result:
 
-            concept = recommendation["concept"]
-            status = recommendation["status"]
+            concept = priority_result["concept"]
+
+            status = priority_result["status"]
 
             if status == "Possible Misconception":
 
                 st.error(
-                    f"🚨 **Focus on {concept} first.**\n\n"
+                    f"🚨 **Investigate {concept} first.**\n\n"
                     "You answered incorrectly with high confidence. "
-                    "Review the fundamentals and test your understanding "
-                    "again before moving forward."
+                    "This may indicate a misconception or misunderstanding "
+                    "that should be investigated."
                 )
 
             elif status == "Learning Gap":
 
                 st.warning(
                     f"📚 **Focus on {concept} next.**\n\n"
-                    "Your performance suggests that this concept "
-                    "needs more learning and practice."
+                    "Your answers suggest that this concept needs "
+                    "additional learning and practice."
                 )
 
-            elif status == "Confidence Gap":
+            else:
 
                 st.info(
                     f"💡 **Reinforce {concept}.**\n\n"
-                    "You answered correctly, but your confidence "
-                    "is relatively low. Practice a few more problems "
-                    "to strengthen your understanding."
+                    "You answered correctly but your confidence "
+                    "is relatively low."
                 )
 
         else:
 
             st.success(
-                "🎉 Your assessed concepts look strong. "
-                "You're ready to move forward."
+                "🎉 No major learning signals were detected."
             )
 
         st.divider()
 
         # ====================================================
-        # PERSONALIZED STUDY PLAN
+        # PREREQUISITE ANALYSIS
         # ====================================================
 
-        st.subheader("📚 Suggested Study Plan")
+        st.subheader("🔗 Prerequisite Analysis")
 
-        needs_attention = [
+        prerequisite_warnings = []
 
-            result
-            for result in results
+        for result in results:
 
-            if result["status"] != "Strong"
-        ]
+            prerequisite = result["prerequisite"]
 
-        if needs_attention:
+            if prerequisite is None:
+                continue
 
-            for result in needs_attention:
+            if not result["correct"]:
 
-                concept = result["concept"]
-                status = result["status"]
+                prerequisite_warnings.append(
+                    (
+                        result["concept"],
+                        prerequisite
+                    )
+                )
+
+        if prerequisite_warnings:
+
+            for concept, prerequisite in prerequisite_warnings:
+
+                prerequisite_score = concept_scores.get(
+                    prerequisite,
+                    None
+                )
+
+                if prerequisite_score is not None:
+
+                    if prerequisite_score < 60:
+
+                        st.warning(
+                            f"⚠️ **{concept}** may be affected by "
+                            f"weak performance in its prerequisite "
+                            f"**{prerequisite}** "
+                            f"({prerequisite_score:.0f}%)."
+                        )
+
+                    else:
+
+                        st.info(
+                            f"ℹ️ You struggled with **{concept}**, "
+                            f"but its prerequisite **{prerequisite}** "
+                            f"is relatively strong "
+                            f"({prerequisite_score:.0f}%)."
+                        )
+
+        else:
+
+            st.success(
+                "No prerequisite warnings were detected."
+            )
+
+        st.divider()
+
+        # ====================================================
+        # STUDY PLAN
+        # ====================================================
+
+        st.subheader("📚 Personalized Study Plan")
+
+        attention_concepts = []
+
+        for concept in concepts:
+
+            score = concept_scores[concept]
+
+            if score < 60:
+
+                attention_concepts.append(
+                    (concept, score)
+                )
+
+        attention_concepts.sort(
+            key=lambda item: item[1]
+        )
+
+        if attention_concepts:
+
+            for concept, score in attention_concepts:
 
                 st.markdown(
-                    f"**{concept}** → ",
-                    unsafe_allow_html=False
+                    f"**{concept} — {score:.0f}%**"
                 )
 
-                if status == "Possible Misconception":
-
-                    st.write(
-                        "1. Review the fundamentals\n"
-                        "2. Explain the concept in your own words\n"
-                        "3. Solve 3 beginner problems\n"
-                        "4. Retake the assessment"
-                    )
-
-                elif status == "Learning Gap":
-
-                    st.write(
-                        "1. Study the concept fundamentals\n"
-                        "2. Follow one worked example\n"
-                        "3. Solve 3 beginner problems\n"
-                        "4. Retake the assessment"
-                    )
-
-                else:
-
-                    st.write(
-                        "1. Review the concept\n"
-                        "2. Solve 2–3 practice problems\n"
-                        "3. Retest your confidence"
-                    )
+                st.write(
+                    "1. Review the fundamentals\n"
+                    "2. Study a worked example\n"
+                    "3. Solve 3–5 practice problems\n"
+                    "4. Retake questions on this concept"
+                )
 
         else:
 
             st.success(
-                "No major learning gaps detected. "
-                "You can move to the next level."
+                "Your assessed concepts are above the current "
+                "learning-gap threshold. You can move toward "
+                "more advanced problems."
             )
 
         st.divider()
 
         # ====================================================
-        # DYNAMIC COGNITIVE MAP
+        # COGNITIVE LEARNING MAP
         # ====================================================
 
         st.subheader("🗺️ Your Cognitive Learning Map")
 
         st.write(
-            "This map connects concepts in a basic learning sequence. "
-            "The labels below reflect your current assessment."
+            "The map connects concepts using prerequisite "
+            "relationships defined in the V2 question bank."
         )
 
-        # ----------------------------------------------------
-        # STATUS LOOKUP
-        # ----------------------------------------------------
+        def map_label(concept):
 
-        status_map = {
-
-            result["concept"]:
-            result["status"]
-
-            for result in results
-        }
-
-        # ----------------------------------------------------
-        # NODE LABELS
-        # ----------------------------------------------------
-
-        def node_label(concept):
-
-            status = status_map.get(
+            score = concept_scores.get(
                 concept,
-                "Not Assessed"
+                None
             )
 
-            if status == "Strong":
+            if score is None:
 
-                return f"{concept}\\n🟢 Strong"
+                return (
+                    f"{concept}\\n"
+                    "⚪ Not Assessed"
+                )
 
-            elif status == "Confidence Gap":
+            if score >= 80:
 
-                return f"{concept}\\n🟡 Reinforce"
+                return (
+                    f"{concept}\\n"
+                    "🟢 Strong"
+                )
 
-            elif status == "Learning Gap":
+            elif score >= 60:
 
-                return f"{concept}\\n🟠 Learning Gap"
-
-            elif status == "Possible Misconception":
-
-                return f"{concept}\\n🔴 Investigate"
+                return (
+                    f"{concept}\\n"
+                    "🟡 Developing"
+                )
 
             else:
 
-                return f"{concept}\\n⚪ Not Assessed"
-
-        # ----------------------------------------------------
-        # GRAPH
-        # ----------------------------------------------------
+                return (
+                    f"{concept}\\n"
+                    "🟠 Needs Work"
+                )
 
         graph = f"""
 
-        digraph {{
+        digraph LearningMap {{
 
             rankdir=LR
 
             node [
                 shape=box
                 style="rounded"
-                fontsize=12
+                fontsize=11
             ]
 
             Arrays [
-                label="{node_label('Arrays')}"
+                label="{map_label('Arrays')}"
             ]
 
             LinkedLists [
-                label="{node_label('Linked Lists')}"
+                label="{map_label('Linked Lists')}"
             ]
 
             StackQueue [
-                label="{node_label('Stack & Queue')}"
+                label="{map_label('Stack & Queue')}"
             ]
 
             Recursion [
-                label="{node_label('Recursion')}"
+                label="{map_label('Recursion')}"
             ]
 
             Trees [
-                label="{node_label('Trees')}"
+                label="{map_label('Trees')}"
             ]
 
             Graphs [
-                label="Graphs\\n⚪ Not Assessed"
+                label="{map_label('Graphs')}"
             ]
 
             Arrays -> LinkedLists
+
             LinkedLists -> Recursion
+
             StackQueue -> Recursion
+
             Recursion -> Trees
+
             Trees -> Graphs
+
+            Recursion -> Graphs
+
         }}
 
         """
@@ -608,7 +661,7 @@ if name:
         st.divider()
 
         # ====================================================
-        # LEARNING INTERPRETATION
+        # INTERPRETATION
         # ====================================================
 
         st.subheader("🧠 What Your Results Suggest")
@@ -616,33 +669,33 @@ if name:
         if knowledge_score >= 80:
 
             st.success(
-                "You demonstrated strong performance across most "
-                "assessed concepts. You can begin working on "
-                "more advanced DSA problems."
+                "You demonstrated strong overall performance. "
+                "You can begin challenging yourself with more "
+                "advanced DSA problems."
             )
 
         elif knowledge_score >= 60:
 
             st.info(
-                "You have a reasonable foundation, but some concepts "
-                "need reinforcement before moving to advanced topics."
+                "You have a reasonable foundation, but some "
+                "concepts need reinforcement before progressing "
+                "to more advanced topics."
             )
 
         else:
 
             st.warning(
-                "Your current assessment suggests that several "
-                "fundamental concepts need strengthening. "
-                "Focus on the recommended concepts before progressing."
+                "Several fundamental concepts may need strengthening. "
+                "Follow the personalized study plan before progressing."
             )
+
+        st.divider()
 
         # ====================================================
         # FOOTER
         # ====================================================
 
-        st.divider()
-
         st.caption(
-            "AI Cognitive Learning Map — Version 1.0 | "
-            "Rule-based cognitive assessment prototype"
+            "AI Cognitive Learning Map — Version 2.0 | "
+            "Adaptive rule-based learning assessment prototype"
         )
