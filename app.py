@@ -3,16 +3,19 @@ from questions import QUESTIONS
 from diagnostics import DIAGNOSTIC_QUESTIONS
 from diagnostic_engine import classify_diagnostic_reason
 
+
 # ============================================================
-# AI COGNITIVE LEARNING MAP - VERSION 3.2
-# Diagnostic Reasoning Engine
+# AI COGNITIVE LEARNING MAP - VERSION 3.3
+# Structured Diagnostic Reasoning
 # ============================================================
+
 
 st.set_page_config(
     page_title="AI Cognitive Learning Map",
     page_icon="🧠",
     layout="wide"
 )
+
 
 # ============================================================
 # TITLE
@@ -28,11 +31,13 @@ st.write(
 
 st.divider()
 
+
 # ============================================================
 # STUDENT INFORMATION
 # ============================================================
 
 name = st.text_input("👤 What is your name?")
+
 
 if name:
 
@@ -47,12 +52,14 @@ if name:
         "across multiple DSA concepts and difficulty levels."
     )
 
+
     # ========================================================
     # STORE ANSWERS
     # ========================================================
 
     user_answers = {}
     user_confidence = {}
+
 
     # ========================================================
     # QUESTIONS
@@ -89,6 +96,7 @@ if name:
         user_confidence[question_id] = confidence
 
         st.divider()
+
 
     # ========================================================
     # ANALYSIS ENGINE
@@ -136,6 +144,7 @@ if name:
                 "You were highly confident but answered "
                 "incorrectly. This concept should be investigated."
             )
+
 
     # ========================================================
     # ANALYZE BUTTON
@@ -198,6 +207,7 @@ if name:
 
         st.session_state["diagnostic_analysis"] = {}
 
+
     # ========================================================
     # DISPLAY RESULTS
     # ========================================================
@@ -209,6 +219,7 @@ if name:
         st.divider()
 
         st.header("📊 Your Cognitive Profile")
+
 
         # ====================================================
         # OVERALL SCORES
@@ -272,6 +283,7 @@ if name:
 
         st.divider()
 
+
         # ====================================================
         # DIAGNOSTIC QUESTIONING
         # ====================================================
@@ -318,11 +330,35 @@ if name:
                 diagnostic_data["question"]
             )
 
+
+            # ------------------------------------------------
+            # STRUCTURED DIAGNOSTIC OPTIONS
+            # ------------------------------------------------
+
+            diagnostic_options = [
+                option["text"]
+                for option in diagnostic_data["options"]
+            ]
+
             diagnostic_answer = st.radio(
                 "Select the reason that best describes your situation:",
-                diagnostic_data["options"],
+                diagnostic_options,
                 key=f"diagnostic_{question_id}"
             )
+
+
+            # ------------------------------------------------
+            # FIND THE EXPLICIT REASON CODE
+            # ------------------------------------------------
+
+            selected_option = next(
+                option
+                for option in diagnostic_data["options"]
+                if option["text"] == diagnostic_answer
+            )
+
+            reason_code = selected_option["code"]
+
 
             # ------------------------------------------------
             # STORE DIAGNOSTIC RESPONSE
@@ -331,16 +367,19 @@ if name:
             st.session_state["diagnostic_answers"][question_id] = {
                 "concept": result["concept"],
                 "status": status,
-                "reason": diagnostic_answer
+                "reason": diagnostic_answer,
+                "reason_code": reason_code
             }
+
 
             # ------------------------------------------------
             # REASONING ENGINE
             # ------------------------------------------------
 
             cognitive_analysis = classify_diagnostic_reason(
-                diagnostic_answer
+                reason_code
             )
+
 
             st.session_state["diagnostic_analysis"][question_id] = {
                 "concept": result["concept"],
@@ -349,14 +388,16 @@ if name:
                 "recommendation": cognitive_analysis["recommendation"]
             }
 
+
             diagnostic_results.append({
                 "concept": result["concept"],
                 "status": status,
                 "reason": diagnostic_answer,
+                "code": reason_code,
                 "state": cognitive_analysis["state"],
-                "code": cognitive_analysis["code"],
                 "recommendation": cognitive_analysis["recommendation"]
             })
+
 
             # ------------------------------------------------
             # SHOW COGNITIVE INTERPRETATION
@@ -368,11 +409,16 @@ if name:
             )
 
             st.write(
+                f"**Reason code:** `{reason_code}`"
+            )
+
+            st.write(
                 f"**What this means:** "
                 f"{cognitive_analysis['recommendation']}"
             )
 
             st.divider()
+
 
         # ====================================================
         # DIAGNOSTIC SUMMARY
@@ -401,6 +447,7 @@ if name:
                 )
 
             st.divider()
+
 
             # ================================================
             # PERSONALIZED DIAGNOSTIC RECOMMENDATIONS
@@ -441,6 +488,7 @@ if name:
             )
 
         st.divider()
+
 
         # ====================================================
         # DIFFICULTY ANALYSIS
@@ -486,6 +534,7 @@ if name:
                 )
 
         st.divider()
+
 
         # ====================================================
         # CONCEPT ANALYSIS
@@ -548,6 +597,7 @@ if name:
                 )
 
         st.divider()
+
 
         # ====================================================
         # PRIORITY LEARNING AREA
@@ -615,6 +665,7 @@ if name:
 
         st.divider()
 
+
         # ====================================================
         # PREREQUISITE ANALYSIS
         # ====================================================
@@ -676,6 +727,7 @@ if name:
 
         st.divider()
 
+
         # ====================================================
         # PERSONALIZED STUDY PLAN
         # ====================================================
@@ -722,6 +774,7 @@ if name:
 
         st.divider()
 
+
         # ====================================================
         # COGNITIVE LEARNING MAP
         # ====================================================
@@ -767,6 +820,7 @@ if name:
                     f"{concept}\\n"
                     "🟠 Needs Work"
                 )
+
 
         graph = f"""
 
@@ -824,6 +878,7 @@ if name:
 
         st.divider()
 
+
         # ====================================================
         # INTERPRETATION
         # ====================================================
@@ -854,11 +909,12 @@ if name:
 
         st.divider()
 
+
         # ====================================================
         # FOOTER
         # ====================================================
 
         st.caption(
-            "AI Cognitive Learning Map — Version 3.2 | "
-            "Diagnostic reasoning prototype"
+            "AI Cognitive Learning Map — Version 3.3 | "
+            "Structured diagnostic reasoning prototype"
         )
